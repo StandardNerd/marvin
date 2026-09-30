@@ -1,0 +1,111 @@
+<div class="mb-8">
+  <%= link_to '← Experiments', experiments_path, class: 'text-sm text-gray-400 hover:text-gray-300' %>
+  <h1 class="text-2xl font-bold text-white mt-2">Compare Experiments</h1>
+</div>
+
+<% if @training_runs.size >= 2 %>
+  <div class="overflow-x-auto">
+    <table class="min-w-full">
+      <thead>
+        <tr>
+          <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider bg-gray-800 sticky left-0 z-10 min-w-[160px]">Property</th>
+          <% @training_runs.each do |run| %>
+            <th class="px-4 py-3 text-left text-xs font-medium bg-gray-800 min-w-[200px]">
+              <%= link_to run.name, project_training_run_path(run.project, run), class: 'text-indigo-400 hover:text-indigo-300 font-semibold text-sm' %>
+              <div class="text-xs text-gray-500 font-normal mt-0.5"><%= run.project.name %></div>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-700">
+        <!-- Overview -->
+        <tr class="bg-gray-800/30">
+          <td class="px-4 py-3 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Status</td>
+          <% @training_runs.each do |run| %>
+            <td class="px-4 py-3"><%= status_badge(run.status) %></td>
+          <% end %>
+        </tr>
+        <tr class="bg-gray-800/30">
+          <td class="px-4 py-3 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Base Model</td>
+          <% @training_runs.each do |run| %>
+            <td class="px-4 py-3 text-sm font-mono text-white"><%= run.base_model %></td>
+          <% end %>
+        </tr>
+        <tr class="bg-gray-800/30">
+          <td class="px-4 py-3 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Dataset</td>
+          <% @training_runs.each do |run| %>
+            <td class="px-4 py-3 text-sm text-white"><%= run.dataset.name %> <span class="text-gray-500">(<%= run.dataset.accepted_count %> accepted)</span></td>
+          <% end %>
+        </tr>
+        <tr class="bg-gray-800/30">
+          <td class="px-4 py-3 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Duration</td>
+          <% @training_runs.each do |run| %>
+            <td class="px-4 py-3 text-sm font-mono text-white"><%= run.formatted_duration || '—' %></td>
+          <% end %>
+        </tr>
+        <tr class="bg-gray-800/30">
+          <td class="px-4 py-3 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Final Loss</td>
+          <% @training_runs.each do |run| %>
+            <td class="px-4 py-3 text-sm font-mono text-white"><%= run.latest_loss ? format('%.4f', run.latest_loss) : '—' %></td>
+          <% end %>
+        </tr>
+
+        <!-- Configuration Comparison (with diff highlighting) -->
+        <tr><td colspan="<%= @training_runs.size + 1 %>" class="px-4 py-2 bg-gray-800"><span class="text-xs font-medium text-gray-400 uppercase tracking-wider">Configuration</span></td></tr>
+        <% all_keys = @training_runs.flat_map { |r| (r.configuration || {}).keys }.uniq.sort %>
+        <% all_keys.each do |key| %>
+          <% values = @training_runs.map { |r| r.configuration&.dig(key) } %>
+          <% different = values.uniq.size > 1 %>
+          <tr class="<%= different ? 'bg-yellow-900/10' : 'bg-gray-800/30' %>">
+            <td class="px-4 py-2 text-sm text-gray-400 sticky left-0 <%= different ? 'bg-yellow-900/10' : 'bg-gray-800/30' %>">
+              <%= key.humanize %>
+              <% if different %>
+                <span class="ml-1 text-xs text-yellow-500">differs</span>
+              <% end %>
+            </td>
+            <% @training_runs.each do |run| %>
+              <td class="px-4 py-2 text-sm font-mono <%= different ? 'text-yellow-300' : 'text-white' %>"><%= run.configuration&.dig(key) || '—' %></td>
+            <% end %>
+          </tr>
+        <% end %>
+
+        <!-- Evaluation Comparison -->
+        <% evaluations_exist = @training_runs.any? { |r| r.evaluations.where(status: 'completed').any? } %>
+        <% if evaluations_exist %>
+          <tr><td colspan="<%= @training_runs.size + 1 %>" class="px-4 py-2 bg-gray-800"><span class="text-xs font-medium text-gray-400 uppercase tracking-wider">Evaluation (Basic Metrics)</span></td></tr>
+          <tr class="bg-gray-800/30">
+            <td class="px-4 py-2 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Aggregate Score</td>
+            <% @training_runs.each do |run| %>
+              <% eval_run = run.evaluations.where(status: 'completed').last %>
+              <td class="px-4 py-2 text-sm font-mono text-white"><%= eval_run&.aggregate_score ? format('%.1f%%', eval_run.aggregate_score * 100) : '—' %></td>
+            <% end %>
+          </tr>
+          <tr class="bg-gray-800/30">
+            <td class="px-4 py-2 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Exact Match</td>
+            <% @training_runs.each do |run| %>
+              <% eval_run = run.evaluations.where(status: 'completed').last %>
+              <td class="px-4 py-2 text-sm font-mono text-white"><%= eval_run&.exact_match_score ? format('%.1f%%', eval_run.exact_match_score * 100) : '—' %></td>
+            <% end %>
+          </tr>
+          <tr class="bg-gray-800/30">
+            <td class="px-4 py-2 text-sm text-gray-400 sticky left-0 bg-gray-800/30">Text Similarity</td>
+            <% @training_runs.each do |run| %>
+              <% eval_run = run.evaluations.where(status: 'completed').last %>
+              <td class="px-4 py-2 text-sm font-mono text-white"><%= eval_run&.similarity_score ? format('%.1f%%', eval_run.similarity_score * 100) : '—' %></td>
+            <% end %>
+          </tr>
+          <tr class="bg-gray-800/30">
+            <td colspan="<%= @training_runs.size + 1 %>" class="px-4 py-2">
+              <p class="text-xs text-yellow-500/70">⚠ These are basic evaluation metrics. They provide a rough comparison but are not comprehensive measures of LLM quality.</p>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center py-12 bg-gray-800/30 rounded-lg border border-gray-700 border-dashed">
+    <p class="text-sm text-gray-500">Select at least 2 experiments to compare.</p>
+    <%= link_to 'Back to Experiments', experiments_path, class: 'mt-4 inline-block text-sm text-indigo-400 hover:text-indigo-300' %>
+  </div>
+<% end %>

@@ -1,0 +1,44 @@
+example_one:
+  dataset: support_v1
+  messages:
+    - role: user
+      content: How do I reset my password?
+    - role: assistant
+      content: Go to Settings > Password > Reset.
+  accepted: true
+
+example_two:
+  dataset: support_v1
+  messages:
+    - role: user
+      content: What is your refund policy?
+    - role: assistant
+      content: We offer 30-day refunds.
+  accepted: true
+
+example_needs_review:
+  dataset: support_v1
+  messages:
+    - role: user
+      content: Hello
+    - role: assistant
+      content: Hi there!
+  accepted:
+
+example_rejected:
+  dataset: support_v1
+  messages:
+    - role: user
+      content: Test
+    - role: assistant
+      content: OK
+  accepted: false
+
+example_with_errors:
+  dataset: support_v1
+  messages:
+    - role: user
+      content: Bad
+  accepted:
+  validation_errors:
+    - Must have at least one user and one assistant message

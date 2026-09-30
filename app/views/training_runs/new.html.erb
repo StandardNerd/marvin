@@ -1,0 +1,25 @@
+<div class="mb-8">
+  <%= link_to "← #{@project.name}", project_path(@project), class: 'text-sm text-gray-400 hover:text-gray-300' %>
+  <h1 class="text-2xl font-bold text-white mt-2">New QLoRA Experiment</h1>
+</div>
+
+<div class="max-w-3xl">
+  <%= form_with model: [@project, @training_run], class: 'space-y-6' do |f| %>
+    <% if @training_run.errors.any? %>
+      <div class="rounded-md bg-red-900/50 border border-red-700 p-4">
+        <ul class="list-disc list-inside text-sm text-red-300">
+          <% @training_run.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= render 'form_fields', f: f, training_run: @training_run %>
+
+    <div class="flex items-center gap-3">
+      <%= f.submit 'Create Experiment', class: 'px-4 py-2 rounded-md bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 cursor-pointer' %>
+      <%= link_to 'Cancel', project_path(@project), class: 'px-4 py-2 text-sm text-gray-400 hover:text-white' %>
+    </div>
+  <% end %>
+</div>

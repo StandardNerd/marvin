@@ -1,0 +1,184 @@
+<div class="mb-6">
+  <div class="flex items-center gap-3 mb-1">
+    <%= link_to @project.name, project_path(@project), class: 'text-sm text-gray-400 hover:text-gray-300' %>
+    <span class="text-gray-600">/</span>
+    <span class="text-sm text-gray-400">Experiments</span>
+  </div>
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <h1 class="text-2xl font-bold text-white"><%= @training_run.name %></h1>
+      <%= status_badge(@training_run.status) %>
+    </div>
+    <div class="flex items-center gap-2">
+      <% if @training_run.pending? %>
+        <%= button_to 'Start Training', start_project_training_run_path(@project, @training_run), method: :post, class: 'px-4 py-2 rounded-md bg-green-600 text-sm font-semibold text-white hover:bg-green-500' %>
+        <%= link_to 'Edit', edit_project_training_run_path(@project, @training_run), class: 'px-3 py-2 text-sm text-gray-300 hover:text-white border border-gray-700 rounded-md hover:border-gray-500' %>
+      <% elsif @training_run.active? %>
+        <%= button_to 'Cancel Training', cancel_project_training_run_path(@project, @training_run), method: :post, class: 'px-4 py-2 rounded-md bg-red-600 text-sm font-semibold text-white hover:bg-red-500', data: { turbo_confirm: 'Cancel this training run?' } %>
+      <% elsif @training_run.completed? %>
+        <% if @training_run.adapter.attached? %>
+          <%= link_to 'Download Adapter', rails_blob_path(@training_run.adapter, disposition: 'attachment'), class: 'px-4 py-2 rounded-md bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500' %>
+        <% end %>
+        <%= link_to 'Run Evaluation', new_project_training_run_evaluation_path(@project, @training_run), class: 'px-3 py-2 text-sm text-gray-300 hover:text-white border border-gray-700 rounded-md hover:border-gray-500' %>
+        <%= link_to 'Register Adapter', new_project_model_artifact_path(@project, training_run_id: @training_run.id), class: 'px-3 py-2 text-sm text-gray-300 hover:text-white border border-gray-700 rounded-md hover:border-gray-500' %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6" <%= @training_run.active? ? "data-controller=\"polling\" data-polling-interval-value=\"5000\" data-polling-url-value=\"#{metrics_project_training_run_path(@project, @training_run, format: :json)}\"" : "" %>>
+  <!-- Left Column: Training Progress -->
+  <div class="lg:col-span-2 space-y-6">
+    <% if @training_run.running? || @training_run.completed? %>
+      <!-- Training Progress Card -->
+      <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Training Progress</h3>
+        <% if @latest_metrics %>
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div>
+              <p class="text-xs text-gray-500">Epoch</p>
+              <p class="text-xl font-bold text-white"><%= @latest_metrics.epoch ? format('%.1f', @latest_metrics.epoch) : '—' %> <span class="text-sm text-gray-500">/ <%= @training_run.total_epochs %></span></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Step</p>
+              <p class="text-xl font-bold text-white"><%= number_with_delimiter(@latest_metrics.step) %></p>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500">Loss</p>
+              <p class="text-xl font-bold text-white font-mono"><%= format('%.4f', @latest_metrics.loss) %></p>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Loss Chart -->
+        <% if @metrics_data.any? %>
+          <div class="h-64" data-controller="chart" data-chart-data-value="<%= @metrics_data.to_json %>">
+            <canvas data-chart-target="canvas"></canvas>
+          </div>
+        <% else %>
+          <p class="text-sm text-gray-500 text-center py-8">Waiting for training metrics...</p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if @training_run.completed? && @training_run.formatted_duration %>
+      <div class="bg-green-900/20 rounded-lg border border-green-800 p-6">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h3 class="text-sm font-medium text-green-400">Training Complete</h3>
+        </div>
+        <p class="text-sm text-gray-300">Duration: <span class="font-mono text-white"><%= @training_run.formatted_duration %></span></p>
+      </div>
+    <% end %>
+
+    <% if @training_run.failed? %>
+      <div class="bg-red-900/20 rounded-lg border border-red-800 p-6">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <h3 class="text-sm font-medium text-red-400">Training Failed</h3>
+        </div>
+        <p class="text-sm text-gray-300"><%= @training_run.error_message %></p>
+      </div>
+    <% end %>
+
+    <!-- Evaluations -->
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider">Evaluations</h3>
+        <% if @training_run.completed? %>
+          <%= link_to 'New Evaluation', new_project_training_run_evaluation_path(@project, @training_run), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+        <% end %>
+      </div>
+      <% if @training_run.evaluations.any? %>
+        <div class="space-y-3">
+          <% @training_run.evaluations.each do |eval| %>
+            <div class="flex items-center justify-between p-3 bg-gray-900/50 rounded border border-gray-700">
+              <div>
+                <%= link_to eval.name, project_training_run_evaluation_path(@project, @training_run, eval), class: 'text-sm font-medium text-indigo-400 hover:text-indigo-300' %>
+                <p class="text-xs text-gray-500 mt-0.5"><%= time_ago_in_words(eval.created_at) %> ago</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <% if eval.completed? && eval.aggregate_score %>
+                  <span class="text-sm font-mono text-gray-300">Score: <%= format('%.1f%%', eval.aggregate_score * 100) %></span>
+                <% end %>
+                <%= status_badge(eval.status) %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-gray-500">No evaluations yet.<%= ' Complete training first.' unless @training_run.completed? %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Right Column: Details -->
+  <div class="space-y-6">
+    <!-- Model Info -->
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+      <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Model</h3>
+      <p class="text-sm font-mono text-white"><%= @training_run.base_model %></p>
+    </div>
+
+    <!-- Dataset Info -->
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+      <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Dataset</h3>
+      <%= link_to @training_run.dataset.name, project_dataset_path(@project, @training_run.dataset), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+      <p class="text-xs text-gray-500 mt-1"><%= number_with_delimiter(@training_run.dataset.accepted_count) %> accepted examples</p>
+    </div>
+
+    <!-- Configuration -->
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+      <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Configuration</h3>
+      <dl class="space-y-2">
+        <% (@training_run.configuration || {}).each do |key, value| %>
+          <div class="flex justify-between">
+            <dt class="text-xs text-gray-500"><%= key.humanize %></dt>
+            <dd class="text-sm text-white font-mono"><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+
+    <!-- Timing -->
+    <% if @training_run.started_at %>
+      <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Timing</h3>
+        <dl class="space-y-2">
+          <% if @training_run.formatted_duration %>
+            <div class="flex justify-between">
+              <dt class="text-xs text-gray-500">Duration</dt>
+              <dd class="text-sm text-white font-mono"><%= @training_run.formatted_duration %></dd>
+            </div>
+          <% end %>
+          <div class="flex justify-between">
+            <dt class="text-xs text-gray-500">Started</dt>
+            <dd class="text-sm text-gray-300"><%= @training_run.started_at.strftime('%Y-%m-%d %H:%M') %></dd>
+          </div>
+          <% if @training_run.finished_at %>
+            <div class="flex justify-between">
+              <dt class="text-xs text-gray-500">Finished</dt>
+              <dd class="text-sm text-gray-300"><%= @training_run.finished_at.strftime('%Y-%m-%d %H:%M') %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+    <% end %>
+
+    <!-- Adapter -->
+    <% if @training_run.completed? %>
+      <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6">
+        <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-4">Adapter</h3>
+        <% if @training_run.adapter.attached? %>
+          <p class="text-sm text-green-400 mb-3">Adapter available</p>
+          <%= link_to 'Download', rails_blob_path(@training_run.adapter, disposition: 'attachment'), class: 'inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-sm font-medium text-white hover:bg-indigo-500' %>
+        <% elsif @training_run.model_artifact %>
+          <p class="text-sm text-gray-300">Registered as: <span class="text-white"><%= @training_run.model_artifact.display_name %></span></p>
+        <% else %>
+          <p class="text-sm text-gray-500 mb-3">No adapter file stored yet.</p>
+          <%= link_to 'Register Adapter', new_project_model_artifact_path(@project, training_run_id: @training_run.id), class: 'text-sm text-indigo-400 hover:text-indigo-300' %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

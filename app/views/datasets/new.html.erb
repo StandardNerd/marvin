@@ -1,0 +1,47 @@
+<div class="mb-8">
+  <%= link_to "← #{@project.name}", project_path(@project), class: 'text-sm text-gray-400 hover:text-gray-300' %>
+  <h1 class="text-2xl font-bold text-white mt-2">Upload Dataset</h1>
+</div>
+
+<div class="max-w-2xl">
+  <%= form_with model: [@project, @dataset], class: 'space-y-6' do |f| %>
+    <% if @dataset.errors.any? %>
+      <div class="rounded-md bg-red-900/50 border border-red-700 p-4">
+        <ul class="list-disc list-inside text-sm text-red-300">
+          <% @dataset.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6 space-y-5">
+      <div>
+        <%= f.label :name, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.text_field :name, required: true, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent', placeholder: 'support-conversations-v1' %>
+      </div>
+
+      <div>
+        <%= f.label :description, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.text_area :description, rows: 2, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent', placeholder: 'Description...' %>
+      </div>
+
+      <div>
+        <%= f.label :file, 'Dataset File (JSONL)', class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <div class="mt-1">
+          <%= f.file_field :file, accept: '.jsonl,.json', class: 'block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 file:cursor-pointer' %>
+        </div>
+        <p class="mt-2 text-xs text-gray-500">Upload a JSONL file with chat-format examples. Each line should contain a JSON object with a "messages" array.</p>
+        <div class="mt-3 bg-gray-900 rounded p-3">
+          <p class="text-xs text-gray-500 mb-1">Expected format (one per line):</p>
+          <code class="text-xs text-green-400 font-mono">{"messages":[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]}</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <%= f.submit 'Upload', class: 'px-4 py-2 rounded-md bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 cursor-pointer' %>
+      <%= link_to 'Cancel', project_path(@project), class: 'px-4 py-2 text-sm text-gray-400 hover:text-white' %>
+    </div>
+  <% end %>
+</div>

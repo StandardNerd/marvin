@@ -1,0 +1,9 @@
+completed_eval:
+  training_run: completed_run
+  name: Eval-1
+  status: completed
+  metrics:
+    exact_match: 0.15
+    text_similarity: 0.65
+    aggregate_score: 0.4
+  results: []

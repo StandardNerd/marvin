@@ -1,0 +1,41 @@
+<div class="mb-8">
+  <%= link_to '← Artifacts', project_model_artifacts_path(@project), class: 'text-sm text-gray-400 hover:text-gray-300' %>
+  <h1 class="text-2xl font-bold text-white mt-2">Register Model Artifact</h1>
+</div>
+
+<div class="max-w-2xl">
+  <%= form_with model: [@project, @artifact], class: 'space-y-6' do |f| %>
+    <% if @artifact.errors.any? %>
+      <div class="rounded-md bg-red-900/50 border border-red-700 p-4">
+        <ul class="list-disc list-inside text-sm text-red-300">
+          <% @artifact.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6 space-y-5">
+      <div>
+        <%= f.label :name, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.text_field :name, required: true, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white' %>
+      </div>
+      <div>
+        <%= f.label :version, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.text_field :version, required: true, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white' %>
+      </div>
+      <div>
+        <%= f.label :description, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.text_area :description, rows: 3, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white' %>
+      </div>
+      <div>
+        <%= f.label :training_run_id, 'Training Run', class: 'block text-sm font-medium text-gray-300 mb-1' %>
+        <%= f.select :training_run_id, @completed_runs.map { |r| ["#{r.name} (#{r.created_at.to_date})", r.id] }, { include_blank: 'Select completed run...' }, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white' %>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <%= f.submit 'Register Artifact', class: 'px-4 py-2 rounded-md bg-indigo-600 text-sm font-semibold text-white hover:bg-indigo-500 cursor-pointer' %>
+    </div>
+  <% end %>
+</div>

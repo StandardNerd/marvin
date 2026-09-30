@@ -1,0 +1,6 @@
+support_adapter:
+  training_run: completed_run
+  name: support-assistant
+  version: v1
+  base_model: Qwen/Qwen3-8B
+  description: Support adapter

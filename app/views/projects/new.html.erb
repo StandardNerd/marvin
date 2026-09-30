@@ -1,0 +1,8 @@
+<div class="mb-8">
+  <%= link_to '← Projects', projects_path, class: 'text-sm text-gray-400 hover:text-gray-300' %>
+  <h1 class="text-2xl font-bold text-white mt-2">New Project</h1>
+</div>
+
+<div class="max-w-2xl">
+  <%= render 'form', project: @project %>
+</div>

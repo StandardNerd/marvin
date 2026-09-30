@@ -1,0 +1,88 @@
+<div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6 space-y-5">
+  <h3 class="text-lg font-medium text-white mb-4">Experiment Settings</h3>
+
+  <div>
+    <%= f.label :name, class: 'block text-sm font-medium text-gray-300 mb-1' %>
+    <%= f.text_field :name, required: true, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent', placeholder: 'support-qlora-v1' %>
+  </div>
+
+  <div>
+    <%= f.label :dataset_id, 'Dataset', class: 'block text-sm font-medium text-gray-300 mb-1' %>
+    <% if @datasets.any? %>
+      <%= f.select :dataset_id, @datasets.map { |d| ["#{d.name} (#{d.accepted_count} accepted examples)", d.id] }, { include_blank: 'Select a dataset...' }, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent' %>
+    <% else %>
+      <p class="text-sm text-yellow-400">No ready datasets available. <%= link_to 'Upload one first', new_project_dataset_path(@project), class: 'text-indigo-400 hover:text-indigo-300' %>.</p>
+    <% end %>
+  </div>
+
+  <div>
+    <%= f.label :base_model, 'Base Model', class: 'block text-sm font-medium text-gray-300 mb-1' %>
+    <%= f.text_field :base_model, class: 'w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent' %>
+  </div>
+</div>
+
+<div class="bg-gray-800/50 rounded-lg border border-gray-700 p-6" data-controller="collapse" data-collapse-open-value="<%= training_run.persisted? ? 'true' : 'false' %>">
+  <button type="button" data-action="click->collapse#toggle" class="flex items-center justify-between w-full text-left">
+    <h3 class="text-lg font-medium text-white">QLoRA Configuration</h3>
+    <svg class="w-5 h-5 text-gray-400 transform transition-transform" data-collapse-target="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  <div data-collapse-target="content" class="mt-5 space-y-5" style="<%= training_run.persisted? ? '' : 'display: none;' %>">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">LoRA Rank (r)</label>
+        <input type="number" name="training_run[configuration][lora_r]" value="<%= training_run.configuration&.dig('lora_r') || 16 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <p class="mt-1 text-xs text-gray-500">Higher = more capacity, more VRAM</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">LoRA Alpha</label>
+        <input type="number" name="training_run[configuration][lora_alpha]" value="<%= training_run.configuration&.dig('lora_alpha') || 32 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+        <p class="mt-1 text-xs text-gray-500">Scaling factor (typically 2× rank)</p>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-gray-300 mb-1">LoRA Dropout</label>
+      <input type="number" step="0.01" name="training_run[configuration][lora_dropout]" value="<%= training_run.configuration&.dig('lora_dropout') || 0.05 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Learning Rate</label>
+        <input type="number" step="0.00001" name="training_run[configuration][learning_rate]" value="<%= training_run.configuration&.dig('learning_rate') || 0.0002 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Epochs</label>
+        <input type="number" name="training_run[configuration][epochs]" value="<%= training_run.configuration&.dig('epochs') || 3 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Batch Size</label>
+        <input type="number" name="training_run[configuration][batch_size]" value="<%= training_run.configuration&.dig('batch_size') || 1 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Gradient Accumulation Steps</label>
+        <input type="number" name="training_run[configuration][gradient_accumulation_steps]" value="<%= training_run.configuration&.dig('gradient_accumulation_steps') || 8 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Max Sequence Length</label>
+        <input type="number" name="training_run[configuration][max_seq_length]" value="<%= training_run.configuration&.dig('max_seq_length') || 2048 %>" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-300 mb-1">Quantization</label>
+        <select name="training_run[configuration][quantization]" class="w-full rounded-md bg-gray-900 border border-gray-700 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+          <option value="4bit_nf4" <%= 'selected' if (training_run.configuration&.dig('quantization') || '4bit_nf4') == '4bit_nf4' %>>4-bit NF4 (recommended)</option>
+          <option value="4bit_fp4" <%= 'selected' if training_run.configuration&.dig('quantization') == '4bit_fp4' %>>4-bit FP4</option>
+          <option value="8bit" <%= 'selected' if training_run.configuration&.dig('quantization') == '8bit' %>>8-bit</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>

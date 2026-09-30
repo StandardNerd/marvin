@@ -1,0 +1,14 @@
+support_v1:
+  project: support_bot
+  name: support-v1
+  description: Support conversations
+  format: jsonl
+  status: ready
+  examples_count: 5
+
+other_dataset:
+  project: other_project
+  name: other-dataset
+  format: jsonl
+  status: ready
+  examples_count: 0

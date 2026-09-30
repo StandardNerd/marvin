@@ -1,0 +1,13 @@
+metric_one:
+  training_run: completed_run
+  step: 50
+  epoch: 1.5
+  loss: 1.2
+  learning_rate: 0.0002
+
+metric_two:
+  training_run: completed_run
+  step: 100
+  epoch: 3.0
+  loss: 0.8
+  learning_rate: 0.0001

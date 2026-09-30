@@ -1,0 +1,44 @@
+completed_run:
+  project: support_bot
+  dataset: support_v1
+  name: support-qlora-v1
+  base_model: Qwen/Qwen3-8B
+  status: completed
+  configuration:
+    method: qlora
+    lora_r: 16
+    lora_alpha: 32
+    lora_dropout: 0.05
+    learning_rate: 0.0002
+    epochs: 3
+    batch_size: 1
+    gradient_accumulation_steps: 8
+    max_seq_length: 2048
+    quantization: 4bit_nf4
+  metrics:
+    latest_step: 100
+    latest_epoch: 3.0
+    latest_loss: 0.8
+  started_at: <%= 1.hour.ago %>
+  finished_at: <%= 30.minutes.ago %>
+
+pending_run:
+  project: support_bot
+  dataset: support_v1
+  name: support-qlora-v2
+  base_model: Qwen/Qwen3-8B
+  status: pending
+  configuration:
+    method: qlora
+    lora_r: 16
+    lora_alpha: 32
+
+other_run:
+  project: other_project
+  dataset: other_dataset
+  name: other-run
+  base_model: Qwen/Qwen3-8B
+  status: completed
+  configuration:
+    method: qlora
+    lora_r: 8

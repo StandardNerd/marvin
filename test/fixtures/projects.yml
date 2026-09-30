@@ -1,0 +1,11 @@
+support_bot:
+  user: demo
+  name: Customer Support Bot
+  description: Fine-tuning for customer support
+  base_model: Qwen/Qwen3-8B
+
+other_project:
+  user: other_user
+  name: Other Project
+  description: Another project
+  base_model: Qwen/Qwen3-8B

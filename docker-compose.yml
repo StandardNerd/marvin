@@ -1,0 +1,70 @@
+services:
+  rails:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+      - storage:/rails/storage
+    environment:
+      - RAILS_ENV=development
+      - ML_WORKER_URL=http://ml-worker:8000
+      - ML_WORKER_API_KEY=dev-worker-key
+      - DEFAULT_BASE_MODEL=Qwen/Qwen3-8B
+      - REDIS_URL=redis://redis:6379/0
+      - RAILS_INTERNAL_URL=http://rails:3000
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  ml-worker:
+    build:
+      context: ./ml_worker
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - model_storage:/app/storage
+      - shared_datasets:/app/storage/datasets
+    environment:
+      - ML_WORKER_API_KEY=dev-worker-key
+      - ML_WORKER_RAILS_URL=http://rails:3000
+      - ML_WORKER_LOG_LEVEL=INFO
+    # Uncomment the following for GPU support (requires NVIDIA Container Toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  storage:
+  redis_data:
+  model_storage:
+  shared_datasets:
